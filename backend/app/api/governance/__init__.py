@@ -1,0 +1,7 @@
+from flask import Blueprint
+
+
+governance_bp = Blueprint('governance', __name__)
+
+
+from . import routes  # noqa: E402,F401

@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Reports &amp; Analytics Export</title>
+  <style>
+    @page {
+      size: {{ 'A4 landscape' if orientation == 'landscape' else 'A4 portrait' }};
+      margin: 10mm 10mm 12mm 10mm;
+      @top-left {
+        content: "Republic of the Philippines · DILG Province of Laguna · PDMU";
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 7.5pt;
+        color: #525252;
+        font-weight: 500;
+      }
+      @top-right {
+        content: "Project Monitoring & Compliance Report";
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 7.5pt;
+        color: #525252;
+        font-weight: 500;
+      }
+      @bottom-left {
+        content: "Generated: {{ generated_at }} | Scope: {{ scope }} | FY {{ fiscal_year or 'All' }}";
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 7.5pt;
+        color: #525252;
+      }
+      @bottom-right {
+        content: "Page " counter(page) " of " counter(pages);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 7.5pt;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+    }
+
+    @page :first {
+      margin: 4mm 10mm 6mm 10mm;
+      @top-left {
+        content: none;
+      }
+      @top-right {
+        content: none;
+      }
+    }
+
+    :root {
+      --brand-accent: #85101a; /* DILG Deep Crimson */
+      --progress-fill: #1b365d; /* Dark Institutional Navy */
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 9pt;
+      line-height: 1.35;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+
+    /* Page 1 Official DILG Letterhead */
+    .dilg-letterhead {
+      text-align: center;
+      margin: 0 auto 2px auto;
+      padding-bottom: 0;
+    }
+    .dilg-seal {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto 1px auto;
+    }
+    .letterhead-country {
+      font-size: 7.5pt;
+      font-weight: 500;
+      color: #525252;
+      line-height: 1.1;
+    }
+    .letterhead-dept {
+      font-size: 9pt;
+      font-weight: 800;
+      color: #1a1a1a;
+      letter-spacing: 0.02em;
+      line-height: 1.15;
+      margin: 1px 0;
+    }
+    .letterhead-region {
+      font-size: 7.5pt;
+      font-weight: 500;
+      color: #525252;
+      line-height: 1.1;
+    }
+
+    /* Document Header */
+    .report-header {
+      border-bottom: 2px solid var(--brand-accent, #85101a); /* DILG Deep Crimson accent */
+      padding-bottom: 3px;
+      margin-bottom: 4px;
+      display: table;
+      width: 100%;
+    }
+    .report-header-left {
+      display: table-cell;
+      vertical-align: middle;
+    }
+    .report-header-right {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: right;
+    }
+    .institution-name {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #525252;
+      font-weight: 600;
+      margin: 0 0 2px 0;
+    }
+    .report-title {
+      font-size: 12pt;
+      font-weight: 800;
+      color: var(--brand-accent, #85101a); /* DILG Deep Crimson accent */
+      margin: 0 0 1px 0;
+    }
+    .report-subtitle {
+      font-size: 7.5pt;
+      color: #525252;
+      margin: 0;
+    }
+    .meta-badge {
+      display: inline-block;
+      background: #f5f5f5;
+      border: 1px solid #d4d4d4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 7pt;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    /* Section Titles */
+    .section {
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 2px 0;
+      padding-bottom: 1px;
+      border-bottom: 1px solid #e5e5e5;
+    }
+    .section-desc {
+      font-size: 7pt;
+      color: #525252;
+      margin: 0 0 3px 0;
+    }
+
+    /* KPI Grid Table */
+    .kpi-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 6px 0;
+      margin-bottom: 4px;
+    }
+    .kpi-cell {
+      width: 25%;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      padding: 4px 6px;
+      vertical-align: top;
+    }
+    .kpi-label {
+      font-size: 7pt;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #525252;
+      margin-bottom: 2px;
+    }
+    .kpi-value {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #1a1a1a;
+      line-height: 1;
+    }
+    .kpi-sub {
+      font-size: 6.5pt;
+      color: #737373;
+      margin-top: 2px;
+    }
+
+    /* Progress Distribution Table */
+    .dist-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 6px 0;
+      margin-bottom: 4px;
+    }
+    .dist-cell {
+      width: 20%;
+      background: #ffffff;
+      border: 1px solid #e5e5e5;
+      border-radius: 4px;
+      padding: 3px 5px;
+      text-align: center;
+    }
+    .dist-range {
+      font-size: 7pt;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .dist-count {
+      font-size: 12pt;
+      font-weight: 800;
+      color: #1a1a1a;
+      margin: 1px 0;
+    }
+    .dist-pct {
+      font-size: 6.5pt;
+      color: #525252;
+    }
+
+    /* Formal Document Table Headers: Bold near-black, thin borders, minimal background */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8pt;
+      margin-bottom: 6px;
+    }
+    table.supporting-record-table { table-layout: fixed; }
+    table.supporting-record-table th, table.supporting-record-table td { overflow-wrap: anywhere; word-wrap: break-word; vertical-align: top; }
+    table.data-table thead {
+      display: table-header-group;
+    }
+    table.data-table th {
+      background-color: #f9f9f9;
+      color: #1a1a1a;
+      font-weight: 700;
+      text-align: left;
+      padding: 3.5px 6px;
+      border-top: 1.5px solid #1a1a1a;
+      border-bottom: 1.5px solid #1a1a1a;
+      border-left: none;
+      border-right: none;
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    table.data-table td {
+      padding: 2.5px 6px;
+      border-top: 1px solid #f0f0f0;
+      border-bottom: 1px solid #e5e5e5;
+      border-left: none;
+      border-right: none;
+      vertical-align: middle;
+      color: #1a1a1a;
+    }
+    table.data-table tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    tbody.comparison-record { break-inside: avoid; }
+    table.data-table tr:nth-child(even) td {
+      background-color: #fafafa;
+    }
+
+    /* Badges & Tones */
+    .badge {
+      display: inline-block;
+      padding: 1.5px 5px;
+      border-radius: 3px;
+      font-size: 7pt;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-success, .badge-emerald {
+      background-color: #ecfdf5 !important;
+      border: 1px solid #a7f3d0 !important;
+      color: #065f46 !important;
+    }
+    .badge-warning, .badge-amber {
+      background-color: #fffbeb !important;
+      border: 1px solid #fde68a !important;
+      color: #92400e !important;
+    }
+    .badge-danger, .badge-rose {
+      background-color: #fef2f2 !important;
+      border: 1px solid #fecaca !important;
+      color: #991b1b !important;
+    }
+    .badge-info {
+      background-color: #eff6ff !important;
+      border: 1px solid #bfdbfe !important;
+      color: #1e40af !important;
+    }
+    .badge-purple {
+      background-color: #faf5ff !important;
+      border: 1px solid #e9d5ff !important;
+      color: #6b21a8 !important;
+    }
+    .badge-yellow {
+      background-color: #fefce8 !important;
+      border: 1px solid #fef08a !important;
+      color: #854d0e !important;
+    }
+    .badge-neutral {
+      background-color: #f5f5f5 !important;
+      border: 1px solid #d4d4d4 !important;
+      color: #525252 !important;
+    }
+
+    /* Sub-section headings */
+    .sub-section {
+      margin-top: 10px;
+      margin-bottom: 6px;
+      break-inside: auto;
+    }
+    .sub-section-title {
+      break-after: avoid;
+      font-size: 8pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 2px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .sub-section-desc {
+      break-after: avoid;
+      font-size: 6.5pt;
+      color: #525252;
+      margin: 0 0 4px 0;
+    }
+
+    /* Progress Bar with Dark Institutional Navy fill */
+    .progress-bar-bg {
+      display: inline-block;
+      width: 48px;
+      height: 5px;
+      background-color: #e5e5e5 !important;
+      border-radius: 2px;
+      overflow: hidden;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background-color: var(--progress-fill, #1b365d) !important; /* Dark Institutional Navy */
+      border-radius: 2px;
+    }
+
+    /* Flag Dots */
+    .flag-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 2px;
+      vertical-align: middle;
+    }
+    .flag-dot-danger, .flag-dot-rose { background-color: #ef4444 !important; }
+    .flag-dot-warning, .flag-dot-amber { background-color: #f59e0b !important; }
+    .flag-dot-info { background-color: #3b82f6 !important; }
+    .flag-dot-emerald { background-color: #10b981 !important; }
+    .flag-dot-purple { background-color: #a855f7 !important; }
+    .flag-dot-neutral { background-color: #737373 !important; }
+
+    /* 2-Column Risk Card Grid Table */
+    .card-grid-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 10px 8px;
+      table-layout: fixed;
+      margin-bottom: 10px;
+    }
+    .card-grid-table tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .card-cell {
+      width: 50%;
+      vertical-align: top;
+      padding: 0;
+    }
+    .risk-card {
+      border: 1px solid #d4d4d4;
+      border-radius: 4px;
+      padding: 8px 10px;
+      background-color: #ffffff;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .card-title-row {
+      margin-bottom: 3px;
+    }
+    .card-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      line-height: 1.25;
+      display: inline;
+    }
+    .card-subtitle {
+      font-size: 7.5pt;
+      color: #525252;
+      margin-bottom: 5px;
+    }
+    .card-metrics {
+      font-size: 7.5pt;
+      color: #1a1a1a;
+      margin-bottom: 5px;
+      padding-top: 4px;
+      border-top: 1px dotted #e5e5e5;
+    }
+    .card-remarks {
+      font-size: 7pt;
+      color: #525252;
+      background: #fafafa;
+      border: 1px solid #e5e5e5;
+      border-radius: 3px;
+      padding: 4px 6px;
+      word-wrap: break-word;
+      line-height: 1.3;
+    }
+    .chart-block { break-inside: avoid; margin: 8px 0; }
+    .chart-layout { width: 100%; border-collapse: collapse; }
+    .chart-layout td { vertical-align: middle; padding: 6px 12px; }
+    .chart-key { display: inline-block; width: 9px; height: 9px; margin-right: 5px; }
+    .chart-legend { border-collapse: collapse; width: 100%; }
+    .chart-legend td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; }
+    .milestones { table-layout: fixed; width: 100%; border-spacing: 5px 0; }
+    .milestones td { vertical-align: top; background: #f8fafc; border: 1px solid #cbd5e1; border-top: 3px solid #3b82f6; padding: 9px; }
+    .milestone-count { font-size: 22pt; font-weight: 800; margin: 4px 0; }
+    .chart-caption { font-size: 7.5pt; color: #475569; }
+    .fulfillment { font-size: 22pt; color: #047857; font-weight: 800; }
+    .report-definitions { break-inside: avoid; font-size: 7pt; line-height: 1.3; margin-top: 10px; }
+    .report-definitions p { margin: 4px 0; }
+  </style>
+</head>
+<body>
+
+{% macro comparison_table(title, rows, name_key) %}
+<div class="sub-section"><div class="sub-section-title">{{ title }}</div>
+<table class="data-table supporting-record-table"><colgroup><col style="width:30%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"><col style="width:14%"></colgroup>
+<thead><tr><th>Program / Cluster / LGU</th><th style="text-align: right;">Projects</th><th style="text-align: right;">Applicable</th><th style="text-align: right;">Compliant</th><th style="text-align: right;">Open</th><th style="text-align: right;">Fulfillment Rate</th></tr></thead>
+{% for row in rows %}<tbody class="comparison-record"><tr><td><strong>{{ row.get(name_key) or 'Unassigned' }}</strong>{% if row.get('fiscal_year') %}<br>FY {{ row.fiscal_year }}{% endif %}</td><td style="text-align: right;">{{ row.project_count }}</td><td style="text-align: right;">{{ row.applicable_document_count if row.applicable_document_count is defined else (row.total_document_count - (row.not_applicable_document_count or 0)) }}</td><td style="text-align: right;">{{ row.compliant_document_count }}</td><td style="text-align: right;">{{ row.open_document_count }}</td><td style="text-align: right;">{{ 'Not rated' if (row.applicable_document_count is defined and row.applicable_document_count == 0) else ('%.1f'|format(row.document_compliance_rate or 0) ~ '%') }}</td></tr>
+<tr><td colspan="6" style="font-size: 7.5pt; color: #525252; background: #fafafa; padding: 3px 6px;">Document status counts: {{ row.pending_document_count }} pending; {{ row.under_review_document_count }} under review; {{ row.non_compliant_document_count }} non-compliant; {{ row.compliant_document_count }} compliant; {{ row.waived_document_count }} waived; {{ row.not_applicable_document_count or 0 }} not applicable.</td></tr>
+</tbody>{% else %}<tbody><tr><td colspan="6">No matching projects.</td></tr></tbody>{% endfor %}</table></div>
+{% endmacro %}
+
+
+  <!-- ── OFFICIAL DILG LETTERHEAD (PAGE 1) ── -->
+  <div class="dilg-letterhead">
+    <img class="dilg-seal" src="static/images/dilg-logo.png" alt="DILG Official Seal">
+    <div class="letterhead-country">Republic of the Philippines</div>
+    <div class="letterhead-dept">DEPARTMENT OF THE INTERIOR AND LOCAL GOVERNMENT</div>
+    <div class="letterhead-region">Region IV-A (CALABARZON)</div>
+  </div>
+
+  <!-- ── DOCUMENT HEADER ── -->
+  <div class="report-header">
+    <div class="report-header-left">
+      <div class="report-title">Reports &amp; Analytics Dashboard</div>
+      <div class="report-subtitle">Provincial Project Development and Management Unit (PDMU) — Province of Laguna</div>
+    </div>
+    <div class="report-header-right">
+      <div class="meta-badge">{{ scope_label }}</div><br>
+      <span style="font-size: 7pt; color: #525252; margin-top: 3px; display: inline-block;">
+        Report: <strong>{{ 'Overview with supporting records' if include_appendix else 'Standard overview' }}</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- ── PROJECT MONITORING TAB ── -->
+  {% if 'monitoring' in included_tabs %}
+  <div class="section">
+    <div class="section-title">Project Implementation Status &amp; Monitoring</div>
+    <div class="section-desc">Authoritative implementation status distribution, program &amp; cluster summary, and completion documents closeout</div>
+
+    <!-- Section 1: Project Implementation Status Distribution -->
+    <div class="sub-section">
+      <div class="sub-section-title">Project Implementation Status Distribution</div>
+      <div class="sub-section-desc">Authoritative implementation status across all authorized projects (Total Projects: <strong>{{ status_summary.total or analytics.total_projects or 0 }}</strong>)</div>
+      <div class="chart-block">
+        <table class="chart-layout"><tr>
+          <td style="width: 190px;">{{ status_pie_svg|safe }}</td>
+          <td><strong>{{ status_summary.total or 0 }} projects in scope</strong>
+            <table class="chart-legend">
+              {% for item in (status_summary.get('items') or []) %}
+              <tr><td><span class="chart-key" style="background: {{ status_colors.get(item.key, '#64748b') }};"></span>{{ item.label }}</td><td><strong>{{ item.count }}</strong></td><td>{{ "%.1f"|format(item.percentage or 0) }}%</td></tr>
+              {% endfor %}
+            </table>
+            {% if not status_summary.total %}<p class="chart-caption">No projects match this scope.</p>{% endif %}
+          </td>
+        </tr></table>
+      </div>
+    </div>
+
+    <!-- Section 2: Program & Cluster Implementation Summary -->
+    <div class="sub-section">
+      <div class="sub-section-title">Program &amp; Cluster Implementation Summary</div>
+      <div class="sub-section-desc">Implementation status mix and budget allocations by program, fiscal year, and cluster</div>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Program</th>
+            <th>FY</th>
+            <th>Cluster</th>
+            <th style="text-align: right;">Total</th>
+            <th style="text-align: right;">Allocation</th>
+            <th style="text-align: right;">Not Started</th>
+            <th style="text-align: right;">Ongoing</th>
+            <th style="text-align: right;">Completed</th>
+            <th style="text-align: right;">Cancelled</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in program_cluster_rows %}
+          <tr>
+            <td><strong>{{ row.program_name }}</strong></td>
+            <td>{{ row.fiscal_year }}</td>
+            <td>{{ row.cluster_name }}</td>
+            <td style="text-align: right;"><strong>{{ row.total }}</strong></td>
+            <td style="text-align: right;">
+              {% if row.allocation_recorded_count > 0 and row.total_allocation is not none %}
+                ₱{{ '{:,.2f}'.format(row.total_allocation) }}
+                {% if row.allocation_missing_count > 0 %}
+                  <div style="font-size: 6.5pt; color: #737373;">({{ row.allocation_recorded_count }}/{{ row.total }} recorded)</div>
+                {% endif %}
+              {% else %}
+                <span style="color: #737373; font-style: italic;">Not recorded</span>
+              {% endif %}
+            </td>
+            <td style="text-align: right;">{{ row.statuses.get('not_yet_started', 0) }}</td>
+            <td style="text-align: right;">{{ row.statuses.get('ongoing', 0) }}</td>
+            <td style="text-align: right;">{{ row.statuses.get('completed', 0) }}</td>
+            <td style="text-align: right;">{{ row.statuses.get('cancelled', 0) }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" style="text-align: center; color: #737373; padding: 12px;">No program &amp; cluster records matching active filters.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Section 3: Completion Documents & Closeout -->
+    {% if closeout_readiness and closeout_readiness.stages %}
+    <div class="sub-section chart-block">
+      <div class="sub-section-title">Completion Documents &amp; Closeout</div>
+      <div class="sub-section-desc">Internal completion matrix deliverables (Final SWA, Final Inspection Report / IAR, Certificate of Final Acceptance, Final SORD, Proof of Fund Return where applicable) for 100% physically completed projects</div>
+      <table class="milestones"><tr>
+          {% for stage in closeout_readiness.stages if stage.key in ('physically_complete', 'docs_ready', 'docs_pending', 'final_approved') %}
+            <td style="border-top-color: {{ {'physically_complete': '#3b82f6', 'docs_ready': '#10b981', 'docs_pending': '#f59e0b', 'final_approved': '#059669'}.get(stage.key, '#64748b') }};">
+              <strong>{{ {'physically_complete': 'Physically Complete Projects', 'docs_ready': 'Completion Documents Accepted', 'docs_pending': 'Completion Documents Outstanding', 'final_approved': 'Final Closeout Approved'}.get(stage.key, stage.label) }}</strong>
+              <div class="milestone-count">{{ stage.count or 0 }}</div>
+              <strong>{{ "%.1f"|format(stage.percentage or 0) }}%</strong>
+              <div class="chart-caption">
+              {% if stage.key == 'physically_complete' %}
+                Share of all filtered projects ({{ closeout_readiness.total_projects }})
+              {% else %}
+                Share of 100% physically complete ({{ closeout_readiness.physically_complete_count }})
+              {% endif %}
+              </div>
+            </td>
+          {% endfor %}
+      </tr></table>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- ── Section 4: DOCUMENTARY COMPLIANCE BY LGU ── -->
+  {% if 'documents' in included_tabs %}
+  <div class="section">
+    <div class="section-title">Documentary Compliance by LGU</div>
+    <div class="section-desc">Documentary requirement tracking and comparative compliance across local government units</div>
+
+    <div class="chart-block">
+      <div class="fulfillment">{{ 'Not rated' if documentary_chart.rate is none else ('%.1f'|format(documentary_chart.rate) ~ '%') }}</div>
+      <strong>Requirement fulfillment rate</strong>
+      <p class="chart-caption">{{ documentary_chart.compliant }} compliant / {{ documentary_chart.applicable }} applicable active requirements · {{ documentary_chart.open }} open</p>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 26" width="{{ 1046 if orientation == 'landscape' else 718 }}" height="26" preserveAspectRatio="none" role="img" aria-label="Documentary status breakdown of applicable requirements">
+        <rect width="1000" height="26" fill="#e2e8f0"/>
+        {% set bar = namespace(x=0) %}
+        {% for segment in documentary_chart.segments %}
+        {% if segment.count %}<rect x="{{ bar.x }}" y="0" width="{{ segment.percentage * 10 }}" height="26" fill="{{ segment.color }}"/>{% endif %}
+        {% set bar.x = bar.x + segment.percentage * 10 %}
+        {% endfor %}
+      </svg>
+      <p>{% for segment in documentary_chart.segments %}<span style="margin-right: 12px; white-space: nowrap;"><span class="chart-key" style="background: {{ segment.color }};"></span>{{ segment.label }}: {{ segment.count }}</span>{% endfor %}</p>
+      <p class="chart-caption">Not Applicable: {{ documentary_chart.not_applicable }} (excluded). Waived requirements remain applicable and are tracked separately; they do not count as compliant. No applicable requirements: Not rated.</p>
+    </div>
+
+    <!-- Grouped Documentary Compliance Comparison: LGU first, then Program, Cluster -->
+    {{ comparison_table('LGU Comparison', lgu_analytics, 'lgu_name') }}
+    {{ comparison_table('Program Comparison', program_analytics, 'program_name') }}
+    {{ comparison_table('Cluster Comparison', cluster_analytics, 'cluster_name') }}
+
+    <!-- Secondary: Review and Return History -->
+    {% if return_patterns and return_patterns.requirements %}
+    <div class="sub-section">
+      <div class="sub-section-title">Review and Return History</div>
+      <div class="sub-section-desc">
+        Total Return Events: <strong>{{ return_patterns.total_return_events or 0 }}</strong> ·
+        Unique Returned Requirements: <strong>{{ return_patterns.unique_requirements_returned or 0 }}</strong> ·
+        Affected Projects: <strong>{{ return_patterns.affected_projects_total or 0 }}</strong>
+      </div>
+      <p class="chart-caption">Historical returns identify review bottlenecks. A previously returned requirement may now be compliant; these counts do not imply a current deficiency.</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Requirement Name</th>
+            <th style="text-align: right;">Total Returns</th>
+            <th style="text-align: right;">Unique Reqs</th>
+            <th style="text-align: right;">Affected Projects</th>
+            <th style="text-align: right;">Affected LGUs</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in return_patterns.requirements %}
+          <tr>
+            <td><strong>{{ req.requirement_name }}</strong></td>
+            <td style="text-align: right;"><span class="badge badge-rose">{{ req.return_count }}</span></td>
+            <td style="text-align: right;">{{ req.unique_requirements_count }}</td>
+            <td style="text-align: right;">{{ req.affected_projects_count }}</td>
+            <td style="text-align: right;">{{ req.affected_lgus_count }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% macro records_table(title, rows, columns) %}
+<div class="sub-section">
+  <div class="sub-section-title">{{ title }} ({{ rows|length }} records)</div>
+  <table class="data-table supporting-record-table"><thead><tr>{% for key, label in columns %}<th>{{ label }}</th>{% endfor %}</tr></thead>
+  <tbody>{% for row in rows %}<tr>{% for key, label in columns %}<td>{% if key in ['applicability_reason', 'waived_reason', 'waiver_or_return_reason'] %}{{ row.get(key) or '' }}{% elif row.get(key) is none %}Not recorded{% elif key in ['workflow_status', 'current_workflow_status', 'compliance_status', 'resolution_state', 'push_status', 'risk_level', 'punchlist_status'] %}{{ row.get(key)|replace('_', ' ')|title }}{% else %}{{ row.get(key) }}{% endif %}</td>{% endfor %}</tr>{% else %}<tr><td colspan="{{ columns|length }}">No matching records.</td></tr>{% endfor %}</tbody></table>
+</div>
+{% endmacro %}
+<div class="section report-definitions">
+  <div class="section-title">Report definitions and coverage</div>
+  <p>Scope: {{ scope_label }}. Aggregates and details use the same authorized project cohort. Fiscal year selects projects by funding year; activity includes the recorded history of those projects, not only events occurring within that calendar year.</p>
+  <p>Document compliance = compliant active requirements / applicable active requirements (waived requirements are tracked separately and do not count as compliant evidence). Open = pending + under review + non-compliant. Requirements marked not applicable are excluded from open obligations and the compliance rate denominator.</p>
+  <p>Schedule variance = actual minus target in percentage points, derived from the latest MPR with both values. Negative means behind; positive means ahead. An incomplete MPR is unreported. Allocation represents the recorded project budget amount in project master records.</p>
+  <p>Closeout matrix readiness tracks internal completion matrix deliverables (Final SWA, Final Inspection Report / IAR, Certificate of Final Acceptance, Final SORD, and Proof of Fund Return where applicable) for 100% physically completed projects.</p>
+  <p>Coverage: project implementation status, active documentary compliance, return summaries, and completion matrix deliverables.{% if include_appendix %} The supporting appendix includes full workflow routing history and individual records.{% endif %} This report does not replace financial reconciliation, MAR/Form 3/exception case registers, account/security audits, workbook contents, correspondence, or independently released checker benchmark reports.</p>
+</div>
+
+{% if include_appendix or record_detail == 'full' %}
+<div class="section" style="page-break-before: always;">
+  <div class="section-title">Supporting record appendix</div>
+  <div class="section-desc">Individual project monitoring detail, documentary compliance registers, active workflow requirements, and return event logs</div>
+
+  {% if 'monitoring' in included_tabs and project_rows %}
+  <div class="sub-section">
+    <div class="sub-section-title">Project monitoring detail ({{ project_rows|length }} records)</div>
+    <table class="data-table supporting-record-table"><colgroup><col style="width:38%"><col style="width:28%"><col style="width:12%"><col style="width:10%"><col style="width:12%"></colgroup>
+    <thead><tr><th>Project / program</th><th>LGU / phase / status</th><th>Progress</th><th>Open docs</th><th>Allocation</th></tr></thead><tbody>
+    {% for row in project_rows %}<tr><td><strong>{{ row.project_name }}</strong><br>{{ row.program_code or row.program_name or 'Not recorded' }}</td><td>{{ row.lgu_name }}<br>{{ row.current_phase_label }} / {{ row.overall_status_label }}</td><td>{{ 'Not reported' if row.physical_completion_pct is none else ('%.2f'|format(row.physical_completion_pct) ~ '%') }}</td><td>{{ row.document_open_count }}</td><td>{% if row.budget_amount is not none and row.budget_amount > 0 %}₱{{ '{:,.2f}'.format(row.budget_amount) }}{% elif row.budget_amount == 0 %}₱0.00{% else %}<span style="color: #737373; font-style: italic;">Not recorded</span>{% endif %}</td></tr>
+    <tr><td colspan="5">{% if row.effective_project_kind == 'infrastructure' %}Schedule variance (actual minus target): {{ 'Unreported' if row.latest_variance_pct is none else ('%.2f'|format(row.latest_variance_pct) ~ ' pp') }}{% else %}Specification status: {{ row.non_infra_spec_label }}{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5">No matching projects.</td></tr>{% endfor %}</tbody></table>
+  </div>
+  {% endif %}
+
+  {% if 'documents' in included_tabs and document_rows %}
+  <div class="sub-section">
+    <div class="sub-section-title">Project documentary compliance detail ({{ document_rows|length }} records)</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Project Title</th>
+          <th>LGU</th>
+          <th>Cluster</th>
+          <th style="text-align: right;">Total Req</th>
+          <th style="text-align: right;">Open Docs (Pending / Review / Non-Comp)</th>
+          <th style="text-align: right;">Compliance Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in document_rows %}
+        {% set docs = p.documentary_summary or {} %}
+        <tr>
+          <td><strong>{{ p.project_name }}</strong></td>
+          <td>{{ p.lgu_name }}</td>
+          <td>{{ p.cluster_name }}</td>
+          <td style="text-align: right;">
+            {{ docs.total or 0 }}
+            {% if docs.not_applicable %}
+            <div style="font-size: 6.5pt; color: #525252;">({{ docs.applicable or 0 }} applicable · {{ docs.not_applicable }} n/a)</div>
+            {% endif %}
+          </td>
+          <td style="text-align: right;">
+            <strong>{{ docs.open or 0 }}</strong>
+            <span style="font-size: 6.5pt; color: #525252;">
+              ({{ docs.pending or 0 }}p · {{ docs.under_review or 0 }}r · {{ docs.non_compliant or 0 }}nc)
+            </span>
+          </td>
+          <td style="text-align: right;">
+            {% if (docs.applicable is defined and docs.applicable == 0) or (p.document_applicable_count is defined and p.document_applicable_count == 0) %}
+            <span style="color: #525252; font-weight: 600;">Not rated</span>
+            {% else %}
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: {{ [100, [0, p.document_compliance_rate or 0]|max]|min }}%;"></div>
+            </div>
+            {{ "%.1f"|format(p.document_compliance_rate or 0) }}%
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" style="text-align: center; color: #737373; padding: 12px;">No documentary compliance records matching active filters.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if 'documents' in included_tabs %}
+    {% if workflow_pipeline and workflow_pipeline.items %}
+    {{ records_table('Active workflow requirements', workflow_pipeline['items'], [('requirement_name','Requirement'),('project_name','Project'),('lgu_name','LGU'),('compliance_status','Compliance'),('workflow_status','Routing'),('waiver_or_return_reason','Waiver justification / return notes')]) }}
+    {% endif %}
+
+    {% if workflow_activity and workflow_activity.transitions %}
+    {{ records_table('Workflow action history', workflow_activity.transitions, [('created_at','Time (UTC)'),('action_label','Action'),('requirement_name','Requirement'),('project_name','Project'),('actor_name','Actor'),('reason','Recorded reason')]) }}
+    {% endif %}
+
+    {% if waived_requirements %}
+    {{ records_table('Waived requirements', waived_requirements, [('requirement_name','Requirement'),('project_name','Project'),('lgu_name','LGU'),('compliance_status','Compliance'),('waived_reason','Waiver justification')]) }}
+    {% endif %}
+
+    {% if not_applicable_requirements %}
+    {{ records_table('Not applicable requirements', not_applicable_requirements, [('requirement_name','Requirement'),('project_name','Project'),('lgu_name','LGU'),('applicability_label','Applicability'),('applicability_reason','Justification / reason')]) }}
+    {% endif %}
+
+    {% if return_patterns and return_patterns.requirements %}
+      {% for requirement in return_patterns.requirements %}
+      {{ records_table(requirement.requirement_name ~ ' return events', requirement.events, [('created_at','Time (UTC)'),('project_name','Project'),('reason','Return reason'),('actor_name','Reviewer'),('current_workflow_status','Current routing')]) }}
+      {% endfor %}
+    {% endif %}
+  {% endif %}
+
+  {% if 'monitoring' in included_tabs and closeout_readiness and closeout_readiness.projects %}
+  {{ records_table('Completion matrix readiness', closeout_readiness.projects, [('project_name','Project'),('punchlist_status','Punchlist'),('docs_total','Applicable documents'),('docs_approved','Accepted documents'),('docs_pending','Pending documents'),('closeout_stage_label','Stage')]) }}
+  {% endif %}
+</div>
+{% endif %}
+
+</body>
+</html>

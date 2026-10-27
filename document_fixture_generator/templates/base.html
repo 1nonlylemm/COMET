@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{% block title %}Official Documentary Requirement{% endblock %}</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 20mm 15mm 20mm 15mm;
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 8pt;
+      color: #666;
+    }
+  }
+
+  body {
+    font-family: "Liberation Sans", "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.35;
+    color: #111;
+    margin: 0;
+    padding: 0;
+  }
+
+  .watermark {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px dashed #f5c6cb;
+    text-align: center;
+    padding: 6px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+  }
+
+  .gov-header {
+    text-align: center;
+    border-bottom: 2px solid #222;
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+  }
+
+  .gov-header h5 {
+    margin: 0;
+    font-size: 9pt;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .gov-header h4 {
+    margin: 1px 0;
+    font-size: 10pt;
+    font-weight: 600;
+  }
+
+  .gov-header h3 {
+    margin: 2px 0;
+    font-size: 11pt;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+  }
+
+  .gov-header h2 {
+    margin: 4px 0 0 0;
+    font-size: 11.5pt;
+    font-weight: bold;
+    color: #0b3d91;
+  }
+
+  .doc-title {
+    text-align: center;
+    font-size: 13pt;
+    font-weight: bold;
+    letter-spacing: 0.75px;
+    margin: 16px 0 14px 0;
+    text-transform: uppercase;
+    text-decoration: underline;
+  }
+
+  .metadata-table {
+    width: 100%;
+    margin-bottom: 16px;
+    border-collapse: collapse;
+  }
+
+  .metadata-table td {
+    padding: 3px 6px;
+    vertical-align: top;
+    font-size: 9.5pt;
+  }
+
+  .metadata-label {
+    font-weight: bold;
+    width: 25%;
+    color: #222;
+  }
+
+  .metadata-value {
+    width: 75%;
+  }
+
+  .content-block {
+    margin: 14px 0;
+    text-align: justify;
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 9pt;
+  }
+
+  table.data-table th, table.data-table td {
+    border: 1px solid #444;
+    padding: 5px 8px;
+  }
+
+  table.data-table th {
+    background-color: #f0f3f6;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .numeric-col {
+    text-align: right;
+  }
+
+  .total-row {
+    font-weight: bold;
+    background-color: #f7f9fa;
+  }
+
+  .signatories-section {
+    margin-top: 35px;
+    width: 100%;
+  }
+
+  .signatory-box {
+    display: inline-block;
+    width: 48%;
+    vertical-align: top;
+    text-align: center;
+  }
+
+  .sig-name {
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 35px;
+    font-size: 10pt;
+  }
+
+  .sig-title {
+    font-size: 8.5pt;
+    color: #333;
+  }
+
+  .footer-audit-note {
+    margin-top: 30px;
+    border-top: 1px solid #ccc;
+    padding-top: 5px;
+    font-size: 7.5pt;
+    color: #777;
+    text-align: left;
+  }
+{% block extra_styles %}{% endblock %}
+</style>
+</head>
+<body>
+
+<div class="watermark">
+  SYNTHETIC FIXTURE &mdash; FOR COMET TEST &amp; AUDIT PURPOSES ONLY &mdash; NOT AN OFFICIAL GOVERNMENT RECORD
+</div>
+
+<div class="gov-header">
+  <h5>Republic of the Philippines</h5>
+  <h4>Province of {{ province or "Laguna" }}</h4>
+  <h3>{{ lgu_display or ((lgu_type or "Municipality") ~ " of " ~ lgu) }}</h3>
+  {% if office %}
+  <h2>{{ office }}</h2>
+  {% endif %}
+</div>
+
+{% block content %}{% endblock %}
+
+<div class="footer-audit-note">
+  <strong>COMET Documentary Fixture ID:</strong> {{ fixture_id }} |
+  <strong>Requirement:</strong> {{ requirement_id }} ({{ evidence_type }}) |
+  <strong>Generated:</strong> {{ generated_at }}
+</div>
+
+</body>
+</html>

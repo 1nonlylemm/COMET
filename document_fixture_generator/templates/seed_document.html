@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ document.title }}{% endblock %}
+{% block extra_styles %}
+.doc-title { font-size: 11.5pt; margin: 12px 0; }
+.metadata-table td { padding: 2px 5px; font-size: 9pt; overflow-wrap: anywhere; }
+.metadata-table tr, .data-table tr { break-inside: avoid; }
+.content-block { margin: 10px 0; }
+.signatories-section { margin-top: 18px; break-inside: avoid; }
+.sig-name { margin-top: 18px; }
+.footer-audit-note { margin-top: 16px; }
+{% endblock %}
+{% block content %}
+<div class="doc-title">{{ document.title }}</div>
+<table class="metadata-table">
+  {% for label, value in document.meta_rows %}
+  <tr><td class="metadata-label">{{ label }}</td><td class="metadata-value">{{ value }}</td></tr>
+  {% endfor %}
+</table>
+{% for section in document.body_sections %}
+<div class="content-block">
+  {% if section.heading %}<strong>{{ section.heading }}</strong>{% endif %}
+  <p>{{ section.text }}</p>
+</div>
+{% endfor %}
+{% if document.rows %}
+<table class="data-table"><thead><tr>
+{% for column in document.table_columns %}<th>{{ column }}</th>{% endfor %}
+</tr></thead><tbody>
+{% for row in document.rows %}<tr>
+{% for column in document.table_columns %}<td>{{ row.get(column, '') }}</td>{% endfor %}
+</tr>{% endfor %}
+</tbody></table>
+{% endif %}
+{% if document.certification %}<p class="content-block">{{ document.certification }}</p>{% endif %}
+<p style="font-size:8pt;color:#555">Illustrative demo contents only. No actual signature, payment, inspection, beneficiary identity, photograph, or professional engineering approval is represented.</p>
+<div class="signatories-section">
+{% for signatory in document.signatories %}
+<div class="signatory-box" style="width:32%">
+<div>{{ signatory.label }}</div><div class="sig-name">DEMO SIGNATORY</div>
+<div class="sig-title">{{ signatory.title }}<br>Unsigned synthetic sample</div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

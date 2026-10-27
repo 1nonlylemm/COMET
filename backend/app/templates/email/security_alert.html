@@ -1,0 +1,40 @@
+{% extends "email/base.html" %}
+
+{% block title %}Security Alert: {{ alert_type_display }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+  <div class="badge-wrapper">
+    <span class="badge badge-security">Security Alert</span>
+  </div>
+  <h2 class="title">{{ alert_type_display }}</h2>
+
+  <p class="paragraph">
+    Hello {{ first_name }},
+  </p>
+  <p class="paragraph">
+    This is an automated security advisory regarding recent administrative or authentication activity on your <strong>{{ app_name }}</strong> account:
+  </p>
+
+  <table class="details-table">
+    <tr>
+      <td class="details-label">Security Event:</td>
+      <td class="details-value"><strong>{{ alert_type_display }}</strong></td>
+    </tr>
+    <tr>
+      <td class="details-label">Timestamp:</td>
+      <td class="details-value">{{ event_time }}</td>
+    </tr>
+    {% if details %}
+      {% for key, val in details.items() %}
+      <tr>
+        <td class="details-label">{{ key|replace('_', ' ')|title }}:</td>
+        <td class="details-value">{{ val }}</td>
+      </tr>
+      {% endfor %}
+    {% endif %}
+  </table>
+
+  <div class="alert-box alert-critical" style="margin-top: 24px;">
+    <strong>Immediate Security Guidance:</strong> If you did not perform or authorize this action, your account credentials may be compromised. Please contact your system administrator or IT security officer immediately.
+  </div>
+{% endblock %}

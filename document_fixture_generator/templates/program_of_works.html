@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Program of Works &mdash; Detailed Bill of Quantities{% endblock %}
+
+{% block content %}
+<div class="doc-title">Program of Works (POW)</div>
+
+<table class="metadata-table">
+  <tr>
+    <td class="metadata-label">Project Title:</td>
+    <td class="metadata-value"><strong>{{ project_title or "Rehabilitation of Municipal Drainage System" }}</strong></td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Location:</td>
+    <td class="metadata-value">{{ location or "Poblacion, Mabitac, Laguna" }}</td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Date Prepared:</td>
+    <td class="metadata-value">{{ date or "September 12, 2023" }}</td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Total Project Cost:</td>
+    <td class="metadata-value" style="font-size: 11pt; font-weight: bold; color: #0b3d91;">
+      PHP {{ formatted_amount or "1,450,000.00" }}
+    </td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Contract Duration:</td>
+    <td class="metadata-value">{{ duration or "60 Calendar Days" }}</td>
+  </tr>
+</table>
+
+<div class="content-block">
+  <p style="font-weight: 600; margin-bottom: 6px;">BILL OF QUANTITIES AND COST BREAKDOWN:</p>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 12%;">Item No.</th>
+      <th style="width: 44%;">Scope of Work Description</th>
+      <th style="width: 12%;">Quantity</th>
+      <th style="width: 12%;">Unit</th>
+      <th style="width: 20%;">Total Cost (PHP)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if items %}
+      {% for item in items %}
+      <tr>
+        <td style="text-align: center;">{{ item.item_no }}</td>
+        <td>{{ item.description }}</td>
+        <td class="numeric-col">{{ item.quantity }}</td>
+        <td style="text-align: center;">{{ item.unit }}</td>
+        <td class="numeric-col">PHP {{ item.cost }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td style="text-align: center;">101 (1)</td>
+        <td>Removal of Actual Structures and Obstruction</td>
+        <td class="numeric-col">1.00</td>
+        <td style="text-align: center;">l.s.</td>
+        <td class="numeric-col">PHP 120,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">103 (1)a</td>
+        <td>Structure Excavation (Common Soil)</td>
+        <td class="numeric-col">145.00</td>
+        <td style="text-align: center;">cu.m.</td>
+        <td class="numeric-col">PHP 180,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">404 (1)a</td>
+        <td>Reinforcing Steel Bar (Grade 40)</td>
+        <td class="numeric-col">3,850.00</td>
+        <td style="text-align: center;">kg.</td>
+        <td class="numeric-col">PHP 350,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">405 (1)a2</td>
+        <td>Structural Concrete (Class A, 20.68 MPa @ 28 days)</td>
+        <td class="numeric-col">58.00</td>
+        <td style="text-align: center;">cu.m.</td>
+        <td class="numeric-col">PHP 500,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">500 (1)b</td>
+        <td>Pipe Culverts and Storm Drains (910mm dia.)</td>
+        <td class="numeric-col">65.00</td>
+        <td style="text-align: center;">lin.m.</td>
+        <td class="numeric-col">PHP 300,000.00</td>
+      </tr>
+    {% endif %}
+    <tr class="total-row">
+      <td colspan="4" style="text-align: right;">TOTAL ESTIMATED DIRECT &amp; INDIRECT COST:</td>
+      <td class="numeric-col" style="font-size: 10.5pt; color: #0b3d91;">
+        PHP {{ formatted_amount or "1,450,000.00" }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="signatories-section">
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Prepared by:</div>
+    <div class="sig-name">{{ engineer_name or "ENGR. PEDRO T. SANTOS" }}</div>
+    <div class="sig-title">Municipal Engineer<br>Municipality of {{ lgu }}</div>
+  </div>
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Approved by:</div>
+    <div class="sig-name">{{ mayor_name or "HON. MARIO B. DELA CRUZ" }}</div>
+    <div class="sig-title">Municipal Mayor<br>Municipality of {{ lgu }}</div>
+  </div>
+</div>
+{% endblock %}

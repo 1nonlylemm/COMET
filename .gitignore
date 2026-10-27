@@ -1,0 +1,63 @@
+# Ignore root documentation files and scripts
+.env
+.env.*
+.env.production*
+.*/
+others/
+docs/
+brochure/
+references/*
+output/
+backend/instance/demo_submissions/
+backend/instance/uploads/
+backend/instance/object_storage/
+backend/instance/storage_tmp/
+backend/backend/uploads/
+artifacts/
+demo/
+scratch/
+scratch_artifacts/
+/reports/
+blackbox_results/
+blind_scan_assets/
+staging_phase4_3r2c3_106/
+staging_phase4_3r2c/
+evaluations/
+backend/tests/rendered_emails/
+acceptance_tests/
+
+# Python build/test artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Frontend build/runtime artifacts
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Backend runtime artifacts
+tmp/
+backend/instance/
+backend/uploads/
+backend/celerybeat-schedule
+*.bak*
+*_dump.txt
+backend/*.db
+
+# Keep these
+!docker-compose.yml
+!/.gitignore
+
+# Client handover hygiene
+*.log
+/ci_job_log.txt
+/e2e_tests/e2e_tests/*.png
+.DS_Store
+Thumbs.db
+!.github/
+!.github/**

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ notice_title }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #111827; margin: 32px; }
+    .right { text-align: right; }
+    .subject { font-weight: 700; margin: 14px 0; }
+    .project-table { width: 100%; border-collapse: collapse; margin: 18px 0; }
+    .project-table th, .project-table td { border: 1px solid #1f2937; padding: 8px; vertical-align: top; }
+    .signature { margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="right">{{ notice_date_display }}</div>
+  <p><strong>HON. {{ lce_name_upper }}</strong><br>{{ lce_position }}<br>{{ lgu_display }}</p>
+  <p class="subject">Subject: {{ subject_line }}</p>
+  <p>Dear Hon. {{ lce_surname }};</p>
+
+  {% for paragraph in default_body_paragraphs %}
+    <p>{{ paragraph }}</p>
+  {% endfor %}
+
+  <table class="project-table">
+    <thead>
+      <tr>
+        <th>PROJECT(S)</th>
+        <th>FINDING(S)</th>
+        <th>RECOMMENDATION(S)</th>
+        <th>COMPLIANCE PERIOD</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in project_rows %}
+        <tr>
+          <td>{{ item.project_name }}</td>
+          <td>{{ item.finding_summary }}</td>
+          <td>{{ item.recommendation_summary }}</td>
+          <td>{{ item.compliance_period_display }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% for paragraph in custom_body_paragraphs %}
+    <p>{{ paragraph }}</p>
+  {% endfor %}
+
+  <div class="signature">
+    <p>Very truly yours,</p>
+    <p><strong>{{ signatory_name }}</strong><br>{{ signatory_title }}</p>
+    <p>cc: {{ mlgoo_name }}</p>
+  </div>
+</body>
+</html>

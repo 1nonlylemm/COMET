@@ -1,0 +1,279 @@
+name: comet
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be configured}
+      POSTGRES_DB: ${POSTGRES_DB:-workspace_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-workspace_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Zero public host port exposure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    # Zero public host port exposure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  backend:
+    image: comet-backend:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    restart: always
+    command: ["gunicorn", "--workers", "${WEB_CONCURRENCY:-2}", "--timeout", "${DOCUMENT_PREVIEW_TIMEOUT_SECONDS:-900}", "--bind", "0.0.0.0:${PORT:-5000}", "run:app"]
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - FLASK_CONFIG=production
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be configured}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be configured}
+      - SYSTEM_CONFIG_SECRET_KEY=${SYSTEM_CONFIG_SECRET_KEY:?SYSTEM_CONFIG_SECRET_KEY must be configured}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL must be configured}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - APP_NAME=${APP_NAME:-DILG Operations Workspace}
+      - APP_TAGLINE=${APP_TAGLINE:-DILG Laguna PDMU Operations System}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL:-https://dilgpdmu.tech}
+      - APP_LOGIN_URL=${APP_LOGIN_URL:-https://dilgpdmu.tech/login}
+      - SUBMISSION_UPLOAD_DIR=${SUBMISSION_UPLOAD_DIR:-/app/uploads/submissions}
+      - GUIDELINE_UPLOAD_DIR=${GUIDELINE_UPLOAD_DIR:-/app/uploads/guidelines}
+      - IMPORT_UPLOAD_DIR=${IMPORT_UPLOAD_DIR:-/app/uploads/imports}
+      - BRANDING_UPLOAD_DIR=${BRANDING_UPLOAD_DIR:-/app/uploads/branding}
+      - REPORT_TEMPLATE_UPLOAD_DIR=${REPORT_TEMPLATE_UPLOAD_DIR:-/app/uploads/report_templates}
+      - OBJECT_STORAGE_PROVIDER=${OBJECT_STORAGE_PROVIDER:-r2}
+      - OBJECT_STORAGE_ENV=${OBJECT_STORAGE_ENV:-production}
+      - OBJECT_STORAGE_BUCKET_PREFIX=${OBJECT_STORAGE_BUCKET_PREFIX:-comet}
+      - OBJECT_STORAGE_TEMP_DIR=${OBJECT_STORAGE_TEMP_DIR:-/app/instance/storage_tmp}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - R2_ENDPOINT_URL=${R2_ENDPOINT_URL}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_REGION=${R2_REGION:-auto}
+      - AI_PROVIDER_ORDER=${AI_PROVIDER_ORDER:-groq,gemini,openrouter}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3.8-27b}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-nvidia/nemotron-3-super-120b-a12b:free}
+      - AI_DOCUMENT_CLASSIFICATION_ENABLED=${AI_DOCUMENT_CLASSIFICATION_ENABLED:-false}
+      - MATCHER_POLICY_PROFILES_ENABLED=${MATCHER_POLICY_PROFILES_ENABLED:-false}
+      - MATCHER_EVIDENCE_SELECTION_ENABLED=${MATCHER_EVIDENCE_SELECTION_ENABLED:-true}
+      - GROQ_SHARED_COOLDOWNS_ENABLED=${GROQ_SHARED_COOLDOWNS_ENABLED:-true}
+      - MAX_CONTENT_LENGTH=${MAX_CONTENT_LENGTH:-104857600}
+      - MAX_SUBMISSION_FILE_BYTES=${MAX_SUBMISSION_FILE_BYTES:-83886080}
+      - DOCUMENT_OCR_MAX_PAGES=${DOCUMENT_OCR_MAX_PAGES:-50}
+      - DOCUMENT_OCR_MAX_SECONDS=${DOCUMENT_OCR_MAX_SECONDS:-600}
+      - DOCUMENT_OCR_WORKERS=${DOCUMENT_OCR_WORKERS:-2}
+      - DOCUMENT_OCR_ADAPTIVE_ORIENTATION=${DOCUMENT_OCR_ADAPTIVE_ORIENTATION:-true}
+      - OMP_THREAD_LIMIT=${OMP_THREAD_LIMIT:-1}
+      - DOCUMENT_MAX_EXTRACTED_TEXT_CHARS=${DOCUMENT_MAX_EXTRACTED_TEXT_CHARS:-200000}
+      - DOCUMENT_PREVIEW_TIMEOUT_SECONDS=${DOCUMENT_PREVIEW_TIMEOUT_SECONDS:-900}
+      - DOCUMENT_LANGUAGE_TOOL_URL=http://languagetool:8010/v2/check
+      - DOCUMENT_LANGUAGE_TOOL_ENABLED=${DOCUMENT_LANGUAGE_TOOL_ENABLED:-true}
+      - DOCUMENT_AWS_ENABLED=${DOCUMENT_AWS_ENABLED:-false}
+      - DOCUMENT_AWS_REGION=${DOCUMENT_AWS_REGION:-ap-southeast-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - DOCUMENT_AWS_TEXTRACT_ENABLED=${DOCUMENT_AWS_TEXTRACT_ENABLED:-true}
+      - DOCUMENT_AWS_REKOGNITION_ENABLED=${DOCUMENT_AWS_REKOGNITION_ENABLED:-true}
+      - DOCUMENT_AWS_LOCATION_ENABLED=${DOCUMENT_AWS_LOCATION_ENABLED:-false}
+      - DOCUMENT_AWS_LOCATION_PLACE_INDEX=${DOCUMENT_AWS_LOCATION_PLACE_INDEX}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-true}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - MAIL_FROM=${MAIL_FROM}
+      - GOOGLE_DRIVE_ENABLED=${GOOGLE_DRIVE_ENABLED:-true}
+      - GOOGLE_DRIVE_SERVICE_ACCOUNT_FILE=${GOOGLE_DRIVE_SERVICE_ACCOUNT_FILE}
+      - GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON=${GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON}
+      - GOOGLE_DRIVE_ROOT_FOLDER_ID=${GOOGLE_DRIVE_ROOT_FOLDER_ID}
+      - GOOGLE_DRIVE_SHARED_DRIVE_ID=${GOOGLE_DRIVE_SHARED_DRIVE_ID}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - GOOGLE_DRIVE_OAUTH_REDIRECT_URI=${GOOGLE_DRIVE_OAUTH_REDIRECT_URI}
+      - SYSTEM_CONFIG_SECRET_KEY=${SYSTEM_CONFIG_SECRET_KEY:?SYSTEM_CONFIG_SECRET_KEY must be configured}
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/instance/object_storage:/app/instance/object_storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    # Zero public host port exposure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "15m"
+        max-file: "3"
+
+  celery_worker:
+    image: comet-backend:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    restart: always
+    command: celery -A app.tasks.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - AI_PROVIDER_ORDER=${AI_PROVIDER_ORDER:-groq,gemini,openrouter}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3.8-27b}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL:-nvidia/nemotron-3-super-120b-a12b:free}
+      - AI_DOCUMENT_CLASSIFICATION_ENABLED=${AI_DOCUMENT_CLASSIFICATION_ENABLED:-false}
+      - MATCHER_POLICY_PROFILES_ENABLED=${MATCHER_POLICY_PROFILES_ENABLED:-false}
+      - MATCHER_EVIDENCE_SELECTION_ENABLED=${MATCHER_EVIDENCE_SELECTION_ENABLED:-true}
+      - GROQ_SHARED_COOLDOWNS_ENABLED=${GROQ_SHARED_COOLDOWNS_ENABLED:-true}
+      - MAX_CONTENT_LENGTH=${MAX_CONTENT_LENGTH:-104857600}
+      - MAX_SUBMISSION_FILE_BYTES=${MAX_SUBMISSION_FILE_BYTES:-83886080}
+      - DOCUMENT_OCR_MAX_SECONDS=${DOCUMENT_OCR_MAX_SECONDS:-600}
+      - DOCUMENT_OCR_WORKERS=${DOCUMENT_OCR_WORKERS:-2}
+      - DOCUMENT_OCR_ADAPTIVE_ORIENTATION=${DOCUMENT_OCR_ADAPTIVE_ORIENTATION:-true}
+      - OMP_THREAD_LIMIT=${OMP_THREAD_LIMIT:-1}
+      - DOCUMENT_OCR_MAX_PAGES=${DOCUMENT_OCR_MAX_PAGES:-50}
+      - DOCUMENT_MAX_EXTRACTED_TEXT_CHARS=${DOCUMENT_MAX_EXTRACTED_TEXT_CHARS:-200000}
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - FLASK_CONFIG=production
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be configured}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be configured}
+      - SYSTEM_CONFIG_SECRET_KEY=${SYSTEM_CONFIG_SECRET_KEY:?SYSTEM_CONFIG_SECRET_KEY must be configured}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL must be configured}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+      - APP_NAME=${APP_NAME:-DILG Operations Workspace}
+      - APP_TAGLINE=${APP_TAGLINE:-DILG Laguna PDMU Operations System}
+      - APP_FRONTEND_URL=${APP_FRONTEND_URL:-https://dilgpdmu.tech}
+      - APP_LOGIN_URL=${APP_LOGIN_URL:-https://dilgpdmu.tech/login}
+      - SUBMISSION_UPLOAD_DIR=${SUBMISSION_UPLOAD_DIR:-/app/uploads/submissions}
+      - GUIDELINE_UPLOAD_DIR=${GUIDELINE_UPLOAD_DIR:-/app/uploads/guidelines}
+      - IMPORT_UPLOAD_DIR=${IMPORT_UPLOAD_DIR:-/app/uploads/imports}
+      - BRANDING_UPLOAD_DIR=${BRANDING_UPLOAD_DIR:-/app/uploads/branding}
+      - REPORT_TEMPLATE_UPLOAD_DIR=${REPORT_TEMPLATE_UPLOAD_DIR:-/app/uploads/report_templates}
+      - OBJECT_STORAGE_PROVIDER=${OBJECT_STORAGE_PROVIDER:-r2}
+      - OBJECT_STORAGE_ENV=${OBJECT_STORAGE_ENV:-production}
+      - OBJECT_STORAGE_BUCKET_PREFIX=${OBJECT_STORAGE_BUCKET_PREFIX:-comet}
+      - OBJECT_STORAGE_TEMP_DIR=${OBJECT_STORAGE_TEMP_DIR:-/app/instance/storage_tmp}
+      - R2_BUCKET_NAME=${R2_BUCKET_NAME}
+      - R2_ENDPOINT_URL=${R2_ENDPOINT_URL}
+      - R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}
+      - R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}
+      - R2_REGION=${R2_REGION:-auto}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USE_TLS=${SMTP_USE_TLS:-true}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - GOOGLE_DRIVE_ENABLED=${GOOGLE_DRIVE_ENABLED:-true}
+      - GOOGLE_DRIVE_SERVICE_ACCOUNT_FILE=${GOOGLE_DRIVE_SERVICE_ACCOUNT_FILE}
+      - GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON=${GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON}
+      - GOOGLE_DRIVE_ROOT_FOLDER_ID=${GOOGLE_DRIVE_ROOT_FOLDER_ID}
+      - GOOGLE_DRIVE_SHARED_DRIVE_ID=${GOOGLE_DRIVE_SHARED_DRIVE_ID}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}
+      - GOOGLE_OAUTH_CLIENT_SECRET=${GOOGLE_OAUTH_CLIENT_SECRET}
+      - GOOGLE_DRIVE_OAUTH_REDIRECT_URI=${GOOGLE_DRIVE_OAUTH_REDIRECT_URI}
+      - SYSTEM_CONFIG_SECRET_KEY=${SYSTEM_CONFIG_SECRET_KEY:?SYSTEM_CONFIG_SECRET_KEY must be configured}
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/instance/object_storage:/app/instance/object_storage
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "15m"
+        max-file: "3"
+
+  celery_beat:
+    image: comet-backend:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend
+    restart: always
+    command: celery -A app.tasks.celery_app beat --loglevel=info
+    environment:
+      - FLASK_APP=run.py
+      - FLASK_ENV=production
+      - FLASK_CONFIG=production
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be configured}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?JWT_SECRET_KEY must be configured}
+      - SYSTEM_CONFIG_SECRET_KEY=${SYSTEM_CONFIG_SECRET_KEY:?SYSTEM_CONFIG_SECRET_KEY must be configured}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL must be configured}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL:-redis://redis:6379/0}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
+    depends_on:
+      redis:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+  frontend:
+    image: comet-frontend:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    environment:
+      - API_UPSTREAM=http://backend:5000
+      - NGINX_CLIENT_MAX_BODY_SIZE=${MAX_CONTENT_LENGTH:-104857600}
+      - DOCUMENT_PREVIEW_TIMEOUT_SECONDS=${DOCUMENT_PREVIEW_TIMEOUT_SECONDS:-900}
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  languagetool:
+    image: collabora/languagetool:latest
+    restart: always
+    # Zero public host port exposure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "2"
+
+volumes:
+  postgres_data:
+    name: comet_postgres_data

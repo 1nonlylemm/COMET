@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+
+  <!-- STYLE BLOCK 1: CORE RESET, CONTAINER, HEADER, TYPOGRAPHY, ALERTS (< 5 KB) -->
+  <style>
+    /* -------------------------------------------------------------------------
+       EMAIL DESIGN SYSTEM — CORE TOKENS & RESET
+       ------------------------------------------------------------------------- */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+      line-height: 1.5;
+    }
+    table {
+      border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+    img {
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f1f5f9;
+      padding: 32px 16px;
+      box-sizing: border-box;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+      box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+    }
+
+    /* -------------------------------------------------------------------------
+       BRANDED HEADER PRIMITIVE (Dynamic per Variant)
+       ------------------------------------------------------------------------- */
+    .header {
+      padding: 24px 32px;
+      text-align: left;
+    }
+    .header-critical {
+      background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+      border-bottom: 4px solid #ef4444;
+    }
+    .header-action {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-bottom: 4px solid #f59e0b;
+    }
+    .header-deadline {
+      background: linear-gradient(135deg, #9a3412, #ea580c);
+      border-bottom: 4px solid #f97316;
+    }
+    .header-escalation {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border-bottom: 4px solid #d97706;
+    }
+    .header-informational {
+      background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+      border-bottom: 4px solid #60a5fa;
+    }
+    .header-success {
+      background: linear-gradient(135deg, #064e3b, #059669);
+      border-bottom: 4px solid #10b981;
+    }
+    .header-security {
+      background: linear-gradient(135deg, #09090b, #18181b);
+      border-bottom: 4px solid #dc2626;
+    }
+    .header-account {
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      border-bottom: 4px solid #3b82f6;
+    }
+
+    .brand-title {
+      color: #ffffff;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .brand-subtitle {
+      color: #bfdbfe;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 4px 0 0 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.3;
+    }
+    .brand-subtitle-critical { color: #fecaca; }
+    .brand-subtitle-deadline { color: #fed7aa; }
+    .brand-subtitle-escalation { color: #fde68a; }
+    .brand-subtitle-success { color: #a7f3d0; }
+    .brand-subtitle-security { color: #cbd5e1; }
+
+    /* -------------------------------------------------------------------------
+       CONTENT BODY
+       ------------------------------------------------------------------------- */
+    .content {
+      padding: 32px;
+    }
+
+    /* -------------------------------------------------------------------------
+       TYPOGRAPHY
+       ------------------------------------------------------------------------- */
+    .title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 16px 0;
+      line-height: 1.35;
+    }
+    .paragraph {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #334155;
+      margin: 0 0 16px 0;
+    }
+
+    /* -------------------------------------------------------------------------
+       ALERT & CALLOUT BOXES
+       ------------------------------------------------------------------------- */
+    .alert-box {
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 20px 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .alert-critical {
+      background-color: #fef2f2;
+      border-left: 4px solid #dc2626;
+      color: #991b1b;
+    }
+    .alert-warning {
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      color: #92400e;
+    }
+    .alert-deadline {
+      background-color: #fff7ed;
+      border-left: 4px solid #ea580c;
+      color: #9a3412;
+    }
+    .alert-success {
+      background-color: #f0fdf4;
+      border-left: 4px solid #16a34a;
+      color: #166534;
+    }
+    .alert-info {
+      background-color: #f0f9ff;
+      border-left: 4px solid #0284c7;
+      color: #075985;
+    }
+  </style>
+
+  <!-- STYLE BLOCK 2: COMPONENTS, BADGES, CARDS, TABLES, BUTTONS, FOOTER (< 6 KB) -->
+  <style>
+    /* -------------------------------------------------------------------------
+       STATUS & PRIORITY BADGES
+       ------------------------------------------------------------------------- */
+    .badge-wrapper {
+      margin-bottom: 16px;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
+    }
+    .badge-critical {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .badge-action, .badge-high {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+    .badge-deadline {
+      background-color: #ffedd5;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+    }
+    .badge-escalation {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+    }
+    .badge-informational, .badge-normal {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+    .badge-success {
+      background-color: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .badge-security {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+    .badge-account {
+      background-color: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    /* -------------------------------------------------------------------------
+       DEADLINE COUNTDOWN PRIMITIVE
+       ------------------------------------------------------------------------- */
+    .deadline-card {
+      background-color: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-left: 4px solid #ea580c;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .deadline-card-overdue {
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+      border-left: 4px solid #dc2626;
+    }
+    .deadline-metric {
+      font-size: 18px;
+      font-weight: 800;
+      color: #9a3412;
+      margin: 0 0 4px 0;
+    }
+    .deadline-metric-overdue {
+      color: #991b1b;
+    }
+    .deadline-desc {
+      font-size: 13px;
+      color: #7c2d12;
+      margin: 0;
+      line-height: 1.4;
+    }
+    .deadline-desc-overdue {
+      color: #7f1d1d;
+    }
+
+    /* -------------------------------------------------------------------------
+       REMINDER WAITING CARD PRIMITIVE
+       ------------------------------------------------------------------------- */
+    .waiting-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 20px 0;
+    }
+    .waiting-row {
+      display: table;
+      width: 100%;
+      margin: 4px 0;
+    }
+    .waiting-cell-label {
+      display: table-cell;
+      width: 32%;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+    }
+    .waiting-cell-value {
+      display: table-cell;
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  </style>
+
+  <!-- STYLE BLOCK 3: METADATA TABLES, ACTION BUTTONS, FOOTER (< 5 KB) -->
+  <style>
+    /* -------------------------------------------------------------------------
+       METADATA TABLE PRIMITIVE
+       ------------------------------------------------------------------------- */
+    .context-table, .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background-color: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+    }
+    .context-table td, .details-table td {
+      padding: 10px 14px;
+      font-size: 13px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .context-table tr:last-child td, .details-table tr:last-child td {
+      border-bottom: none;
+    }
+    .context-label, .details-label {
+      font-weight: 600;
+      color: #64748b;
+      width: 30%;
+    }
+    .context-value, .details-value {
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    /* -------------------------------------------------------------------------
+       EXPLANATION / CONTEXT BOX
+       ------------------------------------------------------------------------- */
+    .explanation-box {
+      margin: 20px 0;
+    }
+    .explanation-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .explanation-text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #334155;
+      margin: 0;
+    }
+
+    /* -------------------------------------------------------------------------
+       CREDENTIALS CARD (For Provisioning)
+       ------------------------------------------------------------------------- */
+    .credentials-box {
+      background-color: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .credentials-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    .credentials-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: 1px;
+      word-break: break-all;
+    }
+
+    /* -------------------------------------------------------------------------
+       ACTION BUTTONS & SECONDARY LINKS
+       ------------------------------------------------------------------------- */
+    .action-container {
+      margin: 28px 0 16px 0;
+      text-align: center;
+    }
+    .action-button {
+      display: inline-block;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+    .action-button-primary {
+      background-color: #2563eb;
+    }
+    .action-button-primary:hover {
+      background-color: #1d4ed8;
+    }
+    .action-button-critical {
+      background-color: #dc2626;
+    }
+    .action-button-critical:hover {
+      background-color: #b91c1c;
+    }
+    .action-button-deadline {
+      background-color: #ea580c;
+    }
+    .action-button-deadline:hover {
+      background-color: #c2410c;
+    }
+    .action-button-success {
+      background-color: #059669;
+    }
+    .action-button-success:hover {
+      background-color: #047857;
+    }
+    .action-button-escalation {
+      background-color: #1e293b;
+    }
+    .action-button-escalation:hover {
+      background-color: #0f172a;
+    }
+
+    .secondary-link-container {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+    .secondary-link {
+      color: #2563eb;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+
+    /* -------------------------------------------------------------------------
+       SECURITY ADVISORY PRIMITIVE
+       ------------------------------------------------------------------------- */
+    .security-note {
+      background-color: #fef2f2;
+      border-left: 4px solid #ef4444;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #7f1d1d;
+      margin: 28px 0 10px 0;
+      line-height: 1.5;
+    }
+
+    /* -------------------------------------------------------------------------
+       FOOTER PRIMITIVE
+       ------------------------------------------------------------------------- */
+    .footer {
+      background-color: #f8fafc;
+      padding: 24px 32px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .footer p {
+      margin: 4px 0;
+    }
+    .footer-app-name {
+      font-weight: 600;
+      color: #334155;
+    }
+    .footer-subtext {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 8px;
+    }
+
+    .paragraph-muted {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 16px;
+    }
+
+    {% block extra_styles %}{% endblock %}
+  </style>
+
+  <!-- STYLE BLOCK 4: COLOR SCHEME & DARK MODE MEDIA QUERY OVERRIDES (< 6 KB) -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      supported-color-schemes: light dark;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body, .wrapper {
+        background-color: #0b0f19 !important;
+        color: #f8fafc !important;
+      }
+      .container {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4) !important;
+      }
+      .title {
+        color: #f8fafc !important;
+      }
+      .paragraph, .explanation-text {
+        color: #e2e8f0 !important;
+      }
+      .paragraph-muted {
+        color: #94a3b8 !important;
+      }
+      .explanation-label {
+        color: #94a3b8 !important;
+      }
+      .secondary-link-container {
+        color: #94a3b8 !important;
+      }
+      .secondary-link {
+        color: #60a5fa !important;
+      }
+
+      /* Context & Details Tables */
+      .context-table, .details-table {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+      }
+      .context-table td, .details-table td {
+        border-bottom-color: #334155 !important;
+      }
+      .context-label, .details-label {
+        color: #94a3b8 !important;
+      }
+      .context-value, .details-value {
+        color: #f8fafc !important;
+      }
+
+      /* Reminder Waiting Card */
+      .waiting-card {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+      }
+      .waiting-cell-label {
+        color: #94a3b8 !important;
+      }
+      .waiting-cell-value {
+        color: #f8fafc !important;
+      }
+
+      /* Credentials Box */
+      .credentials-box {
+        background-color: #0f172a !important;
+        border-color: #334155 !important;
+      }
+      .credentials-label {
+        color: #94a3b8 !important;
+      }
+      .credentials-value {
+        color: #38bdf8 !important;
+      }
+
+      /* Deadline Card */
+      .deadline-card {
+        background-color: #431407 !important;
+        border-color: #7c2d12 !important;
+        border-left-color: #ea580c !important;
+      }
+      .deadline-metric {
+        color: #fdba74 !important;
+      }
+      .deadline-desc {
+        color: #fed7aa !important;
+      }
+      .deadline-card-overdue {
+        background-color: #450a0a !important;
+        border-color: #7f1d1d !important;
+        border-left-color: #ef4444 !important;
+      }
+      .deadline-metric-overdue {
+        color: #fca5a5 !important;
+      }
+      .deadline-desc-overdue {
+        color: #fecaca !important;
+      }
+
+      /* Status & Priority Badges */
+      .badge-critical, .badge-security {
+        background-color: #450a0a !important;
+        color: #fca5a5 !important;
+        border-color: #7f1d1d !important;
+      }
+      .badge-action, .badge-high {
+        background-color: #451a03 !important;
+        color: #fcd34d !important;
+        border-color: #78350f !important;
+      }
+      .badge-deadline {
+        background-color: #431407 !important;
+        color: #fdba74 !important;
+        border-color: #7c2d12 !important;
+      }
+      .badge-escalation {
+        background-color: #0f172a !important;
+        color: #f1f5f9 !important;
+        border-color: #475569 !important;
+      }
+      .badge-informational, .badge-normal {
+        background-color: #082f49 !important;
+        color: #7dd3fc !important;
+        border-color: #075985 !important;
+      }
+      .badge-success {
+        background-color: #052e16 !important;
+        color: #86efac !important;
+        border-color: #166534 !important;
+      }
+      .badge-account {
+        background-color: #172554 !important;
+        color: #93c5fd !important;
+        border-color: #1e40af !important;
+      }
+
+      /* Alert Boxes */
+      .alert-critical {
+        background-color: #450a0a !important;
+        color: #fecaca !important;
+        border-left-color: #ef4444 !important;
+      }
+      .alert-warning {
+        background-color: #451a03 !important;
+        color: #fde68a !important;
+        border-left-color: #f59e0b !important;
+      }
+      .alert-deadline {
+        background-color: #431407 !important;
+        color: #fed7aa !important;
+        border-left-color: #f97316 !important;
+      }
+      .alert-success {
+        background-color: #052e16 !important;
+        color: #bbf7d0 !important;
+        border-left-color: #22c55e !important;
+      }
+      .alert-info {
+        background-color: #082f49 !important;
+        color: #bae6fd !important;
+        border-left-color: #38bdf8 !important;
+      }
+
+      /* Security Note */
+      .security-note {
+        background-color: #450a0a !important;
+        color: #fecaca !important;
+        border-left-color: #ef4444 !important;
+      }
+
+      /* Escalation Action Button */
+      .action-button-escalation {
+        background-color: #334155 !important;
+        border: 1px solid #475569 !important;
+      }
+      .action-button-escalation:hover {
+        background-color: #475569 !important;
+      }
+
+      /* Footer */
+      .footer {
+        background-color: #0f172a !important;
+        border-top-color: #334155 !important;
+        color: #94a3b8 !important;
+      }
+      .footer-app-name {
+        color: #cbd5e1 !important;
+      }
+      .footer-subtext {
+        color: #94a3b8 !important;
+      }
+    }
+  </style>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f1f5f9; color: #0f172a; -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; line-height: 1.5;">
+  <div class="wrapper" style="width: 100%; background-color: #f1f5f9; padding: 32px 16px; box-sizing: border-box;">
+    <div class="container variant-{{ variant|default('action') }}" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.05);">
+      <!-- BRANDED HEADER -->
+      <div class="header header-{{ variant|default('action') }}" style="padding: 24px 32px; text-align: left; {% if variant == 'critical' %}background: linear-gradient(135deg, #7f1d1d, #b91c1c); background-color: #7f1d1d; border-bottom: 4px solid #ef4444;{% elif variant == 'deadline' %}background: linear-gradient(135deg, #9a3412, #ea580c); background-color: #9a3412; border-bottom: 4px solid #f97316;{% elif variant == 'escalation' %}background: linear-gradient(135deg, #0f172a, #1e293b); background-color: #0f172a; border-bottom: 4px solid #d97706;{% elif variant == 'success' %}background: linear-gradient(135deg, #064e3b, #059669); background-color: #064e3b; border-bottom: 4px solid #10b981;{% elif variant == 'security' %}background: linear-gradient(135deg, #09090b, #18181b); background-color: #09090b; border-bottom: 4px solid #dc2626;{% elif variant == 'informational' %}background: linear-gradient(135deg, #1e3a8a, #3b82f6); background-color: #1e3a8a; border-bottom: 4px solid #60a5fa;{% elif variant == 'account' %}background: linear-gradient(135deg, #1e3a8a, #2563eb); background-color: #1e3a8a; border-bottom: 4px solid #3b82f6;{% else %}background: linear-gradient(135deg, #1e3a8a, #2563eb); background-color: #1e3a8a; border-bottom: 4px solid #f59e0b;{% endif %}">
+        <h1 class="brand-title" style="color: #ffffff; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; margin: 0; line-height: 1.2;">{{ app_name }}</h1>
+        {% if app_tagline %}
+        <p class="brand-subtitle brand-subtitle-{{ variant|default('action') }}" style="font-size: 11px; font-weight: 600; margin: 4px 0 0 0; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.3; {% if variant == 'critical' %}color: #fecaca;{% elif variant == 'deadline' %}color: #fed7aa;{% elif variant == 'escalation' %}color: #fde68a;{% elif variant == 'success' %}color: #a7f3d0;{% elif variant == 'security' %}color: #cbd5e1;{% else %}color: #bfdbfe;{% endif %}">{{ app_tagline }}</p>
+        {% endif %}
+      </div>
+
+      <!-- MAIN CONTENT AREA -->
+      <div class="content" style="padding: 32px;">
+        {% block content %}{% endblock %}
+
+        {% block security_note %}
+        <div class="security-note" style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; font-size: 12px; color: #7f1d1d; margin: 28px 0 10px 0; line-height: 1.5;">
+          <strong>Security Advisory:</strong> {{ app_name }} will never ask you to disclose your password or login credentials via email.
+        </div>
+        {% endblock %}
+      </div>
+
+      <!-- STANDARDIZED FOOTER -->
+      {% block footer %}
+      <div class="footer" style="background-color: #f8fafc; padding: 24px 32px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 12px; color: #64748b; line-height: 1.6;">
+        <p style="margin: 4px 0;"><span class="footer-app-name" style="font-weight: 600; color: #334155;">{{ app_name }}</span> — Automated Compliance & Operations Notification</p>
+        {% if pst_timestamp %}
+        <p style="margin: 4px 0;">Generated in Philippine Standard Time ({{ pst_timestamp }}).</p>
+        {% endif %}
+        <p class="footer-subtext" style="font-size: 11px; color: #94a3b8; margin-top: 8px; margin-bottom: 4px;">
+          To manage email notification settings, visit Account Settings > Email & Notification Preferences.
+        </p>
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+</body>
+</html>

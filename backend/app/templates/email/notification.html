@@ -1,0 +1,111 @@
+{% extends "email/base.html" %}
+
+{% block title %}{{ notification.title }} - {{ app_name }}{% endblock %}
+
+{% block content %}
+  <!-- STATUS / PRIORITY BADGE -->
+  {% set b_theme = badge_theme|default(variant)|default('action') %}
+  <div class="badge-wrapper" style="margin-bottom: 16px;">
+    <span class="badge badge-{{ b_theme }}" style="display: inline-block; padding: 4px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-radius: 4px; {% if b_theme in ['critical', 'security'] %}background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;{% elif b_theme == 'deadline' %}background-color: #ffedd5; color: #9a3412; border: 1px solid #fed7aa;{% elif b_theme == 'escalation' %}background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1;{% elif b_theme in ['informational', 'normal'] %}background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;{% elif b_theme == 'success' %}background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0;{% elif b_theme == 'account' %}background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe;{% else %}background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a;{% endif %}">
+      {{ badge_label|default(priority_label) }}
+    </span>
+  </div>
+
+  <!-- EVENT TITLE -->
+  <h2 class="title" style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0; line-height: 1.35;">{{ notification.title }}</h2>
+
+  <!-- PURPOSE-DRIVEN VISUAL CALLOUTS -->
+  {% if deadline_info %}
+  <div class="deadline-card {% if deadline_info.is_overdue %}deadline-card-overdue{% endif %}" style="{% if deadline_info.is_overdue %}background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626;{% else %}background-color: #fff7ed; border: 1px solid #fed7aa; border-left: 4px solid #ea580c;{% endif %} border-radius: 6px; padding: 16px 20px; margin: 20px 0;">
+    <div class="deadline-metric {% if deadline_info.is_overdue %}deadline-metric-overdue{% endif %}" style="font-size: 18px; font-weight: 800; {% if deadline_info.is_overdue %}color: #991b1b;{% else %}color: #9a3412;{% endif %} margin: 0 0 4px 0;">
+      {{ deadline_info.headline }}
+    </div>
+    <p class="deadline-desc {% if deadline_info.is_overdue %}deadline-desc-overdue{% endif %}" style="font-size: 13px; {% if deadline_info.is_overdue %}color: #7f1d1d;{% else %}color: #7c2d12;{% endif %} margin: 0; line-height: 1.4;">
+      {{ deadline_info.detail }}
+    </p>
+  </div>
+  {% elif waiting_info %}
+  <div class="waiting-card" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px 18px; margin: 20px 0;">
+    <div class="waiting-row" style="display: table; width: 100%; margin: 4px 0;">
+      <span class="waiting-cell-label" style="display: table-cell; width: 32%; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Current State</span>
+      <span class="waiting-cell-value" style="display: table-cell; font-size: 13px; font-weight: 600; color: #0f172a;">{{ waiting_info.current_state }}</span>
+    </div>
+    <div class="waiting-row" style="display: table; width: 100%; margin: 4px 0;">
+      <span class="waiting-cell-label" style="display: table-cell; width: 32%; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Time Waiting</span>
+      <span class="waiting-cell-value" style="display: table-cell; font-size: 13px; font-weight: 600; color: #0f172a;">{{ waiting_info.time_waiting }}</span>
+    </div>
+    <div class="waiting-row" style="display: table; width: 100%; margin: 4px 0;">
+      <span class="waiting-cell-label" style="display: table-cell; width: 32%; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b;">Action Expected</span>
+      <span class="waiting-cell-value" style="display: table-cell; font-size: 13px; font-weight: 600; color: #0f172a;">{{ waiting_info.action_expected }}</span>
+    </div>
+  </div>
+  {% elif escalation_info %}
+  <div class="alert-box alert-warning" style="border-radius: 6px; padding: 14px 18px; margin: 20px 0; font-size: 13px; line-height: 1.5; background-color: #fffbeb; border-left: 4px solid #f59e0b; color: #92400e;">
+    <strong>Formal Administrative Notice:</strong> {{ escalation_info.detail }}
+  </div>
+  {% elif variant == 'critical' %}
+  <div class="alert-box alert-critical" style="border-radius: 6px; padding: 14px 18px; margin: 20px 0; font-size: 13px; line-height: 1.5; background-color: #fef2f2; border-left: 4px solid #dc2626; color: #991b1b;">
+    <strong>URGENT ATTENTION REQUIRED:</strong> Immediate action is required to resolve this compliance issue.
+  </div>
+  {% elif variant == 'success' %}
+  <div class="alert-box alert-success" style="border-radius: 6px; padding: 14px 18px; margin: 20px 0; font-size: 13px; line-height: 1.5; background-color: #f0fdf4; border-left: 4px solid #16a34a; color: #166534;">
+    <strong>Verification Cleared:</strong> Documentary requirement has been formally verified and approved.
+  </div>
+  {% endif %}
+
+  <!-- CONTEXTUAL METADATA TABLE -->
+  {% if project_name or lgu_name or requirement_name or status_label or notice_ref %}
+  <table class="context-table" style="width: 100%; border-collapse: collapse; margin: 20px 0; background-color: #f8fafc; border-radius: 6px; border: 1px solid #e2e8f0;">
+    {% if project_name %}
+    <tr>
+      <td class="context-label">Project:</td>
+      <td class="context-value">{{ project_name }}</td>
+    </tr>
+    {% endif %}
+    {% if lgu_name %}
+    <tr>
+      <td class="context-label">LGU:</td>
+      <td class="context-value">{{ lgu_name }}</td>
+    </tr>
+    {% endif %}
+    {% if requirement_name %}
+    <tr>
+      <td class="context-label">Requirement:</td>
+      <td class="context-value">{{ requirement_name }}</td>
+    </tr>
+    {% endif %}
+    {% if notice_ref %}
+    <tr>
+      <td class="context-label">Notice Ref:</td>
+      <td class="context-value">{{ notice_ref }}</td>
+    </tr>
+    {% endif %}
+    {% if status_label %}
+    <tr>
+      <td class="context-label">Current Status:</td>
+      <td class="context-value">{{ status_label }}</td>
+    </tr>
+    {% endif %}
+  </table>
+  {% endif %}
+
+  <!-- EXPLANATION / ACTION CONTEXT -->
+  <div class="explanation-box" style="margin: 20px 0;">
+    <div class="explanation-label" style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; margin-bottom: 6px;">Why you're receiving this:</div>
+    <p class="explanation-text" style="font-size: 14px; line-height: 1.6; color: #334155; margin: 0;">{{ notification.message }}</p>
+  </div>
+
+  <!-- CONTEXTUAL ACTION BUTTON & LINK -->
+  {% if safe_action_url %}
+  {% set btn_theme = button_theme|default('primary') %}
+  <div class="action-container" style="margin: 28px 0 16px 0; text-align: center;">
+    <a href="{{ safe_action_url }}" class="action-button action-button-{{ btn_theme }}" target="_blank" rel="noopener noreferrer" style="display: inline-block; color: #ffffff !important; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; letter-spacing: 0.3px; text-align: center; {% if btn_theme == 'critical' %}background-color: #dc2626;{% elif btn_theme == 'deadline' %}background-color: #ea580c;{% elif btn_theme == 'escalation' %}background-color: #1e293b;{% elif btn_theme == 'success' %}background-color: #059669;{% else %}background-color: #2563eb;{% endif %}">
+      {{ action_label|default('Open in ' ~ app_name) }}
+    </a>
+  </div>
+  <div class="secondary-link-container" style="text-align: center; margin-top: 12px; font-size: 12px; color: #64748b; line-height: 1.4;">
+    If the button above does not work, access directly:<br>
+    <a href="{{ safe_action_url }}" class="secondary-link" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; word-break: break-all;">{{ safe_action_url }}</a>
+  </div>
+  {% endif %}
+{% endblock %}

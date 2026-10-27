@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Notice of Authority to Debit Account Issued (NADAI){% endblock %}
+
+{% block content %}
+<div class="doc-title">Notice of Authority to Debit Account Issued (NADAI)</div>
+
+<table class="metadata-table">
+  <tr>
+    <td class="metadata-label">Date:</td>
+    <td class="metadata-value">{{ date or "August 15, 2023" }}</td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Reference Number:</td>
+    <td class="metadata-value"><strong>{{ reference_number }}</strong></td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Fiscal Year:</td>
+    <td class="metadata-value"><strong>{{ fiscal_year }}</strong></td>
+  </tr>
+  <tr>
+    <td class="metadata-label">To:</td>
+    <td class="metadata-value">The Branch Manager<br>Land Bank of the Philippines<br>Sta. Cruz Test Branch</td>
+  </tr>
+</table>
+
+<div class="content-block">
+  <p>Sir / Madam:</p>
+  <p>
+    Please be advised that this office hereby authorizes the debiting of our LGU Trust Fund Account
+    as detailed below for the implementation of the authorized local infrastructure project:
+  </p>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 25%;">Account Number</th>
+      <th style="width: 45%;">Project / Purpose Description</th>
+      <th style="width: 30%;">Amount (PHP)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{ account_number or "TEST-0000-0000-00" }}</td>
+      <td>
+        <strong>{{ project_title or "Construction of Multi-Purpose Evacuation Center" }}</strong><br>
+        <span style="font-size: 8.5pt; color: #444;">Sub-project Reference: FALGU-2023-LAG-BAY-001</span>
+      </td>
+      <td class="numeric-col" style="font-size: 10.5pt; font-weight: bold;">
+        PHP {{ formatted_amount or "5,000,000.00" }}
+      </td>
+    </tr>
+    <tr class="total-row">
+      <td colspan="2" style="text-align: right;">TOTAL AUTHORIZED DEBIT:</td>
+      <td class="numeric-col" style="font-size: 11pt; color: #0b3d91;">
+        PHP {{ formatted_amount or "5,000,000.00" }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="content-block" style="margin-top: 15px;">
+  <p>
+    Amount in words: <em>{{ amount_in_words or "Five Million Pesos Only" }}</em>.
+  </p>
+  <p>
+    This debit authorization is issued in accordance with DILG Memorandum Circulars and standard
+    government accounting rules under the 2023 Local Government Support Fund &mdash; Financial Assistance
+    to Local Government Units (LGSF-FALGU).
+  </p>
+</div>
+
+<div class="signatories-section">
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Certified Correct &amp; Issued by:</div>
+    <div class="sig-name">{{ treasurer_name or "JUAN C. DELA CRUZ" }}</div>
+    <div class="sig-title">Municipal Treasurer<br>Municipality of {{ lgu }}</div>
+  </div>
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Approved by:</div>
+    <div class="sig-name">{{ mayor_name or "HON. ERNESTO V. SALAZAR" }}</div>
+    <div class="sig-title">Municipal Mayor<br>Municipality of {{ lgu }}</div>
+  </div>
+</div>
+{% endblock %}

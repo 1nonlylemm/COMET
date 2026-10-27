@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Detailed Unit Price Analysis &mdash; Detailed Engineering Design{% endblock %}
+
+{% block content %}
+<div class="doc-title">Detailed Unit Price Analysis (DUPA) / Detailed Estimates</div>
+
+<table class="metadata-table">
+  <tr>
+    <td class="metadata-label">Project Title:</td>
+    <td class="metadata-value"><strong>{{ project_title or "Upgrading of Farm to Market Road" }}</strong></td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Location:</td>
+    <td class="metadata-value">{{ location or "Pakil, Laguna" }}</td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Date Prepared:</td>
+    <td class="metadata-value">Date: {{ date or "October 4, 2023" }}</td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Total Estimated Cost:</td>
+    <td class="metadata-value" style="font-size: 11pt; font-weight: bold; color: #0b3d91;">
+      PHP {{ formatted_amount or "3,000,000.00" }}
+    </td>
+  </tr>
+  <tr>
+    <td class="metadata-label">Implementing Agency:</td>
+    <td class="metadata-value">Municipality of {{ lgu }}, Province of Laguna</td>
+  </tr>
+</table>
+
+<div class="content-block">
+  <p style="font-weight: 600; margin-bottom: 6px;">DETAILED UNIT PRICE ANALYSIS &amp; QUANTITY BREAKDOWN:</p>
+</div>
+
+<table class="data-table">
+  <thead>
+    <tr>
+      <th style="width: 12%;">Item No.</th>
+      <th style="width: 42%;">Scope / Pay Item Description</th>
+      <th style="width: 12%;">Quantity</th>
+      <th style="width: 10%;">Unit</th>
+      <th style="width: 12%;">Unit Cost (PHP)</th>
+      <th style="width: 12%;">Total (PHP)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% if items %}
+      {% for item in items %}
+      <tr>
+        <td style="text-align: center;">{{ item.item_no }}</td>
+        <td>{{ item.description }}</td>
+        <td class="numeric-col">{{ item.quantity }}</td>
+        <td style="text-align: center;">{{ item.unit }}</td>
+        <td class="numeric-col">{{ item.unit_cost }}</td>
+        <td class="numeric-col">{{ item.total_cost }}</td>
+      </tr>
+      {% endfor %}
+    {% else %}
+      <tr>
+        <td style="text-align: center;">105 (1)a</td>
+        <td>Subgrade Preparation (Common Material)</td>
+        <td class="numeric-col">4,500.00</td>
+        <td style="text-align: center;">sq.m.</td>
+        <td class="numeric-col">100.00</td>
+        <td class="numeric-col">PHP 450,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">200 (1)</td>
+        <td>Aggregate Subbase Course</td>
+        <td class="numeric-col">850.00</td>
+        <td style="text-align: center;">cu.m.</td>
+        <td class="numeric-col">1,000.00</td>
+        <td class="numeric-col">PHP 850,000.00</td>
+      </tr>
+      <tr>
+        <td style="text-align: center;">311 (1)a</td>
+        <td>Portland Cement Concrete Pavement (PCCP, 0.20m thick, 14 days)</td>
+        <td class="numeric-col">1,700.00</td>
+        <td style="text-align: center;">sq.m.</td>
+        <td class="numeric-col">1,000.00</td>
+        <td class="numeric-col">PHP 1,700,000.00</td>
+      </tr>
+    {% endif %}
+    <tr class="total-row">
+      <td colspan="5" style="text-align: right;">TOTAL ESTIMATED DIRECT &amp; INDIRECT COST:</td>
+      <td class="numeric-col" style="font-size: 10.5pt; color: #0b3d91;">
+        PHP {{ formatted_amount or "3,000,000.00" }}
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="signatories-section">
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Prepared by:</div>
+    <div class="sig-name">{{ engineer_name or "ENGR. CARLOS E. MENDOZA" }}</div>
+    <div class="sig-title">Municipal Engineer<br>Municipality of {{ lgu }}</div>
+  </div>
+  <div class="signatory-box">
+    <div style="font-size: 8.5pt;">Approved by:</div>
+    <div class="sig-name">{{ mayor_name or "HON. ARTHUR M. VALDEZ" }}</div>
+    <div class="sig-title">Municipal Mayor<br>Municipality of {{ lgu }}</div>
+  </div>
+</div>
+{% endblock %}

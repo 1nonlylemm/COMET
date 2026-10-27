@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ notice_title }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #111827; margin: 32px; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .spacer { height: 12px; }
+    .subject { font-weight: 700; margin: 16px 0; }
+    .letter-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .letter-table th, .letter-table td { border: 1px solid #1f2937; padding: 8px; vertical-align: top; }
+    .signature { margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="center">
+    <div><strong>Republic of the Philippines</strong></div>
+    <div><strong>{{ lgu_office_heading }}</strong></div>
+    <div>{{ lgu_display }}</div>
+    <div class="subject">{{ notice_label | upper }}</div>
+  </div>
+
+  <div class="right">{{ notice_date_display }}</div>
+
+  {% for paragraph in default_body_paragraphs %}
+    <p>{{ paragraph }}</p>
+  {% endfor %}
+
+  <table class="letter-table">
+    <thead>
+      <tr>
+        <th>Findings / Observations</th>
+        <th>Recommendations</th>
+        <th>Agreements / Timelines</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if findings_rows %}
+        {% for finding in findings_rows %}
+          <tr>
+            <td>{{ finding.formal_findings or '—' }}</td>
+            <td>{{ finding.recommendations or '—' }}</td>
+            <td>{{ finding.agreements_timelines or '—' }}</td>
+            <td>{{ finding.remarks or '—' }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="4">No findings have been added yet.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  {% for paragraph in custom_body_paragraphs %}
+    <p>{{ paragraph }}</p>
+  {% endfor %}
+
+  <div class="signature">
+    <p>Very truly yours,</p>
+    <p><strong>{{ signatory_name }}</strong><br>{{ signatory_title }}</p>
+  </div>
+</body>
+</html>
